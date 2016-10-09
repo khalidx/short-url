@@ -54,13 +54,13 @@ public class UrlController
               
        Url url = urlRepository.findOneByHash(hash);
        
-       if (url != null)
+       if (url == null)
        {
-           response.sendRedirect(url.getLongUrl());
+           response.sendError(HttpServletResponse.SC_NOT_FOUND);  // HTTP 404
        }
        else
        {
-           response.sendError(HttpServletResponse.SC_NOT_FOUND);  // HTTP 404
+           response.sendRedirect(url.getLongUrl());
        }
     }
     
