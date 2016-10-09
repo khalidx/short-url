@@ -67,42 +67,42 @@ public class UrlController
     @RequestMapping(value = "/", method = RequestMethod.POST)
     public ResponseEntity<String> shorten(@RequestParam(value="longUrl") String longUrl)
     {
-        if (urlValidator.isValid(longUrl))
+        if (!urlValidator.isValid(longUrl))
         {   
-            String hash = Hashing.murmur3_32().hashString(longUrl, StandardCharsets.UTF_8).toString();
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);  // HTTP 400
+        }
             
-            int counter = 0;  // hash collision retry counter
-            while (urlRepository.findOneByHash(hash) != null && counter < 2)
-            {
-                /*
-                 * Handle the scenario where the generated hash
-                 *  already exists in the database by generating
-                 *  a hash, but if a hash collision occurs try
-                 *  to re-generate the hash two more times. A
-                 *  repetition should rarely occur, much less a
-                 *  second repetition, so we quit after trying
-                 *  again twice.
-                 */
-                
-                logger.info("Hash collision detected! Regenerating the hash...");    
-                hash = Hashing.murmur3_32().hashString(System.currentTimeMillis() + longUrl, StandardCharsets.UTF_8).toString();
-                counter++;
-            }
+        String hash = Hashing.murmur3_32().hashString(longUrl, StandardCharsets.UTF_8).toString();
+        
+        int counter = 0;  // hash collision retry counter
+        while (urlRepository.findOneByHash(hash) != null && counter < 2)
+        {
+            /*
+             * Handle the scenario where the generated hash
+             *  already exists in the database by generating
+             *  a hash, but if a hash collision occurs try
+             *  to re-generate the hash two more times. A
+             *  repetition should rarely occur, much less a
+             *  second repetition, so we quit after trying
+             *  again twice.
+             */
             
-            // If the code above is unable to generate a unique hash, return a server error
-            if (counter == 2)
-            {
-                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);  // HTTP 500
-            }
-            
-            // TODO make sure hashed value is a clean value (readable I vs i, also maybe all lowercase? also no bad words)
-            
-            urlRepository.save(new Url(hash, longUrl));
-            
-            return new ResponseEntity<String>(baseUrl + hash, HttpStatus.CREATED);  // HTTP 201       
+            logger.info("Hash collision detected! Regenerating the hash...");    
+            hash = Hashing.murmur3_32().hashString(System.currentTimeMillis() + longUrl, StandardCharsets.UTF_8).toString();
+            counter++;
         }
         
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);  // HTTP 400
+        // If the code above is unable to generate a unique hash, return a server error
+        if (counter == 2)
+        {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);  // HTTP 500
+        }
+        
+        // TODO make sure hashed value is a clean value (readable I vs i, also maybe all lowercase? also no bad words)
+        
+        urlRepository.save(new Url(hash, longUrl));
+        
+        return new ResponseEntity<String>(baseUrl + hash, HttpStatus.CREATED);  // HTTP 201
     }
 
 }
