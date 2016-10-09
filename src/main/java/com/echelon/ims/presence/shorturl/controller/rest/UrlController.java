@@ -89,6 +89,12 @@ public class UrlController
                 counter++;
             }
             
+            // If the code above is unable to generate a unique hash, return a server error
+            if (counter == 2)
+            {
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);  // HTTP 500
+            }
+            
             // TODO make sure hashed value is a clean value (readable I vs i, also maybe all lowercase? also no bad words)
             
             urlRepository.save(new Url(hash, longUrl));
