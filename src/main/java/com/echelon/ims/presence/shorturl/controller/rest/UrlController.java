@@ -49,7 +49,7 @@ public class UrlController
     {
        if (hash == null || hash.trim().isEmpty())
        {
-           response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+           response.sendError(HttpServletResponse.SC_BAD_REQUEST);  // HTTP 400
        }
               
        Url url = urlRepository.findOneByHash(hash);
@@ -60,7 +60,7 @@ public class UrlController
        }
        else
        {
-           response.sendError(HttpServletResponse.SC_NOT_FOUND);
+           response.sendError(HttpServletResponse.SC_NOT_FOUND);  // HTTP 404
        }
     }
     
@@ -99,10 +99,10 @@ public class UrlController
             
             urlRepository.save(new Url(hash, longUrl));
             
-            return new ResponseEntity<String>(baseUrl + hash, HttpStatus.CREATED);            
+            return new ResponseEntity<String>(baseUrl + hash, HttpStatus.CREATED);  // HTTP 201       
         }
         
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);  // HTTP 400
     }
 
 }
